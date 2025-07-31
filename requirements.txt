@@ -1,5 +1,3 @@
-<<<<<<< HEAD
 gradio
 openai
 requests
->>>>>>> d2c69e5f751d89b85ddfe4ba0d855165f1bad0cb
