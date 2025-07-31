@@ -5,13 +5,21 @@ import os
 
 # Load your Azure OpenAI and Translator API keys from environment variables
 AZURE_OPENAI_ENDPOINT = "https://talk-with-adil-ai.openai.azure.com/"
-AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")  # Must be set in Azure portal or .env
+AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")
 AZURE_DEPLOYMENT_NAME = "gptchat"
 
 AZURE_TRANSLATOR_KEY = os.getenv("AZURE_TRANSLATOR_KEY")
-AZURE_TRANSLATOR_REGION = "eastus"  # Replace with your region
+AZURE_TRANSLATOR_REGION = "eastus"
 TRANSLATOR_ENDPOINT = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0"
 
+# Language label to code mapping
+language_code_map = {
+    "English": "en",
+    "Urdu": "ur",
+    "Roman Urdu": "ur"  # Handled as standard Urdu for translation
+}
+
+# Translate input text using Azure Translator
 def translate_text(text, to_language):
     headers = {
         "Ocp-Apim-Subscription-Key": AZURE_TRANSLATOR_KEY,
@@ -26,6 +34,7 @@ def translate_text(text, to_language):
     else:
         return f"Translation error: {response.text}"
 
+# Chat with Azure OpenAI
 def chat_with_azure_openai(prompt):
     url = f"{AZURE_OPENAI_ENDPOINT}openai/deployments/{AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=2024-03-01"
     headers = {
@@ -43,30 +52,30 @@ def chat_with_azure_openai(prompt):
     else:
         return f"OpenAI Error: {response.text}"
 
-def multilingual_chat(user_input, language):
-    # Translate input to English
-    if language != "en":
+# Multilingual chatbot logic
+def multilingual_chat(user_input, selected_language):
+    lang_code = language_code_map.get(selected_language, "en")
+
+    if lang_code != "en":
         translated_input = translate_text(user_input, "en")
     else:
         translated_input = user_input
 
-    # Chat with Azure OpenAI
     ai_response = chat_with_azure_openai(translated_input)
 
-    # Translate response back
-    if language != "en":
-        final_response = translate_text(ai_response, language)
+    if lang_code != "en":
+        final_response = translate_text(ai_response, lang_code)
     else:
         final_response = ai_response
 
     return final_response
 
-# UI using Gradio
+# Gradio Interface
 iface = gr.Interface(
     fn=multilingual_chat,
     inputs=[
         gr.Textbox(label="Enter your message"),
-        gr.Radio(["en", "ur", "roman-ur"], label="Select Language (English, Urdu, Roman Urdu)")
+        gr.Radio(["English", "Urdu", "Roman Urdu"], label="Select Language")
     ],
     outputs="text",
     title="Talk with Adil - Multilingual AI Chatbot"
@@ -75,4 +84,3 @@ iface = gr.Interface(
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))
     iface.launch(server_name="0.0.0.0", server_port=port)
-
