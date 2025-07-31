@@ -1,0 +1,13 @@
+*.pyc
+__pycache__/
+*.pkl
+*.zip
+*.tar.gz
+*.mp4
+*.mov
+.env
+.venv/
+.idea/
+.vscode/
+node_modules/
+.ipynb_checkpoints/
